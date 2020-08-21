@@ -6,7 +6,11 @@ import java.util.Map;
 class FileServer {
     Map<String, AbstractFile> files = new HashMap<>();
 
-    public boolean add(String fileName) {
+    FileServer() {
+        System.out.println("Server started!");
+    }
+
+    boolean add(String fileName) {
         if (fileName.matches("^file(\\d|10)$")) {
             if (files.get(fileName) != null) {
                 return false;
@@ -17,11 +21,11 @@ class FileServer {
         return false;
     }
 
-    public AbstractFile get(String fileName) {
+    AbstractFile get(String fileName) {
         return files.get(fileName);
     }
 
-    public boolean delete(String fileName) {
+    boolean delete(String fileName) {
         return files.remove(fileName) != null;
     }
 }
