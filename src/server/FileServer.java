@@ -1,31 +1,24 @@
 package server;
 
-import java.util.HashMap;
-import java.util.Map;
-
 class FileServer {
-    Map<String, AbstractFile> files = new HashMap<>();
+    final String SERVER_IP_ADDRESS = "127.0.0.1";
+    final int PORT = 33333;
+    final FileStorage fileStorage = new FileStorage();
 
-    FileServer() {
+    void start() {
         System.out.println("Server started!");
+        // do your server stuff
     }
 
-    boolean add(String fileName) {
-        if (fileName.matches("^file(\\d|10)$")) {
-            if (files.get(fileName) != null) {
-                return false;
-            }
-            files.put(fileName, new AbstractFile(fileName));
-            return true;
-        }
-        return false;
+    public boolean add(String fileName) {
+        return fileStorage.add(fileName);
     }
 
-    AbstractFile get(String fileName) {
-        return files.get(fileName);
+    public AbstractFile get(String fileName) {
+        return fileStorage.get(fileName);
     }
 
-    boolean delete(String fileName) {
-        return files.remove(fileName) != null;
+    public boolean delete(String fileName) {
+        return fileStorage.delete(fileName);
     }
 }
