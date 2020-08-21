@@ -20,8 +20,8 @@ class UserInterface {
         String[] commands = {cmdAdd, cmdGet, cmdDel};
 
         while (true) {
-            String userInput = sc.nextLine().toLowerCase();
-            if (cmdExit.equals(userInput)) {
+            String userInput = sc.nextLine();
+            if (cmdExit.equals(userInput.toLowerCase())) {
                 return;
             }
             String[] inputTokens = userInput.split("\\s+");
@@ -29,7 +29,7 @@ class UserInterface {
                 System.out.println("Error! Invalid format. Expected: command argument");
                 continue;
             }
-            String cmd = inputTokens[0];
+            String cmd = inputTokens[0].toLowerCase();
             String fileName = inputTokens[1];
             String response;
             switch (cmd) {
