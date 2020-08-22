@@ -7,23 +7,41 @@ import java.net.InetAddress;
 import java.net.Socket;
 
 class Client {
-    final String SERVER_ADDRESS = "127.0.0.1";
-    final int PORT = 33333;
+    private final String SERVER_ADDRESS;
+    private final int PORT;
+    private DataInputStream input;
+    private DataOutputStream output;
+
+    public Client(String SERVER_ADDRESS, int PORT) {
+        this.SERVER_ADDRESS = SERVER_ADDRESS;
+        this.PORT = PORT;
+    }
 
     void start() {
-        System.out.println("Client started!");
         try {
             InetAddress ip = InetAddress.getByName(SERVER_ADDRESS);
             Socket socket = new Socket(ip, PORT);
-            DataInputStream input = new DataInputStream(socket.getInputStream());
-            DataOutputStream output = new DataOutputStream(socket.getOutputStream());
-            String msg = "Give me everything you have!";
-            output.writeUTF(msg);
-            System.out.println("Sent: " + msg);
-            String response = input.readUTF();
-            System.out.println("Received: " + response);
+            input = new DataInputStream(socket.getInputStream());
+            output = new DataOutputStream(socket.getOutputStream());
         } catch (IOException e) {
             e.printStackTrace();
+        }
+    }
+
+    public String getFile(String fileName) {
+        try {
+            output.writeUTF("GET " + fileName);
+            String response = input.readUTF();
+            if (response.startsWith("404")) {
+                return null;
+            } else if (response.startsWith("200")) {
+                return response.split(" ")[1];
+            } else {
+                return null; //something went wrong
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+            return null;
         }
     }
 }
