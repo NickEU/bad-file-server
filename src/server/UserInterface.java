@@ -9,7 +9,7 @@ class UserInterface {
 
     void start() {
         server = new FileServer();
-        runMainMenuLoop();
+        server.start();
     }
 
     private void runMainMenuLoop() {
