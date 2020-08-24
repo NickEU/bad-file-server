@@ -11,8 +11,7 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 class FileStorage {
-    private final String pathToDir = "File Server" + File.separator + "task"
-        + File.separator + "src" + File.separator + "server"
+    private final String pathToDir = "src" + File.separator + "server"
         + File.separator + "data" + File.separator;
     Map<String, AbstractFile> files = new HashMap<>();
 
@@ -26,13 +25,12 @@ class FileStorage {
 
     boolean add(String fileName, String fileContent) {
         File file = new File(pathToDir + fileName);
-        System.out.println(file.getAbsolutePath());
         if (file.exists()) {
             return false;
         }
 
         try (PrintWriter pw = new PrintWriter(file)) {
-            pw.println(fileContent);
+            pw.print(fileContent);
             return true;
         } catch (FileNotFoundException e) {
             System.out.println(e.getMessage());
