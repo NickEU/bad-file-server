@@ -3,9 +3,9 @@ package client;
 import java.util.Scanner;
 
 class UserInterface {
+    final String MSG_REQUEST_SENT = "The request was sent.";
     Scanner sc = new Scanner(System.in);
     Client client = new Client("127.0.0.1", 33333);
-    final String MSG_REQUEST_SENT = "The request was sent.";
 
     void start() {
         client.start();
@@ -30,7 +30,11 @@ class UserInterface {
 
     private void deleteFile() {
         String fileName = getFilenameFromUser();
-        // do stuff
+        boolean fileDeleted = client.deleteFile(fileName);
+        System.out.println(MSG_REQUEST_SENT);
+        String result = "Ok, the response says that the file was " +
+            (fileDeleted ? "successfully deleted!" : "not found!");
+        System.out.println(result);
     }
 
     private void createFile() {
@@ -39,9 +43,8 @@ class UserInterface {
         String data = sc.nextLine();
         boolean fileCreated = client.createFile(fileName, data);
         System.out.println(MSG_REQUEST_SENT);
-        String result = fileCreated
-            ? "Ok, the response says that the file was created!"
-            : "Ok, the response says that creating the file was forbidden!";
+        String result = "Ok, the response says that " +
+            (fileCreated ? "the file was created!" : "creating the file was forbidden!");
         System.out.println(result);
     }
 

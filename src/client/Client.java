@@ -11,6 +11,10 @@ class Client {
     private final int PORT;
     private DataInputStream input;
     private DataOutputStream output;
+    private final String STATUS_CODE_200 = "200";
+    private final String STATUS_CODE_404 = "404";
+    private final String STATUS_CODE_403 = "403";
+    private final String COMMAND_ARG_SEPARATOR = " ";
 
     public Client(String SERVER_ADDRESS, int PORT) {
         this.SERVER_ADDRESS = SERVER_ADDRESS;
@@ -29,13 +33,14 @@ class Client {
     }
 
     public String getFile(String fileName) {
+        final String httpRequestMethodGet = "GET";
         try {
-            output.writeUTF("GET " + fileName);
+            output.writeUTF(httpRequestMethodGet + COMMAND_ARG_SEPARATOR + fileName);
             String response = input.readUTF();
-            if (response.startsWith("404")) {
+            if (response.startsWith(STATUS_CODE_404)) {
                 return null;
-            } else if (response.startsWith("200")) {
-                return response.split(" ")[1];
+            } else if (response.startsWith(STATUS_CODE_200)) {
+                return response.split(COMMAND_ARG_SEPARATOR)[1];
             } else {
                 return null; //something went wrong
             }
@@ -46,17 +51,35 @@ class Client {
     }
 
     public boolean createFile(String fileName, String data) {
+        final String httpRequestMethodPut = "PUT";
         try {
-            output.writeUTF("PUT " + fileName + " " + data);
+            output.writeUTF(httpRequestMethodPut + COMMAND_ARG_SEPARATOR
+                + fileName + COMMAND_ARG_SEPARATOR + data);
             String response = input.readUTF();
-            if ("403".equals(response)) {
+            if (STATUS_CODE_403.equals(response)) {
                 return false;
             }
 
-            return "200".equals(response);
+            return STATUS_CODE_200.equals(response);
         } catch (IOException e) {
             e.printStackTrace();
             return false;
         }
+    }
+
+    public boolean deleteFile(String fileName) {
+        final String httpRequestMethodDelete = "DELETE";
+        try {
+            output.writeUTF(httpRequestMethodDelete + COMMAND_ARG_SEPARATOR + fileName);
+            String response = input.readUTF();
+            if (STATUS_CODE_404.equals(response)) {
+                return false;
+            }
+
+            return STATUS_CODE_200.equals(response);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return true;
     }
 }
