@@ -5,15 +5,13 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.stream.Collectors;
 
 class FileStorage {
     private final String pathToDir = "src" + File.separator + "server"
         + File.separator + "data" + File.separator;
-    Map<String, AbstractFile> files = new HashMap<>();
 
     public FileStorage() {
         try {
@@ -49,6 +47,11 @@ class FileStorage {
     }
 
     boolean delete(String fileName) {
-        return files.remove(fileName) != null;
+        try {
+            Path p = Paths.get(pathToDir + fileName);
+            return Files.deleteIfExists(p);
+        } catch (IOException e) {
+            return false;
+        }
     }
 }
