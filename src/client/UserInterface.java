@@ -22,6 +22,9 @@ class UserInterface {
             case "3":
                 deleteFile();
                 break;
+            case "exit":
+                client.shutdownServer();
+                break;
             default:
                 System.out.println("Error! Unrecognized command. Expected one of: ");
                 break;
