@@ -44,4 +44,19 @@ class Client {
             return null;
         }
     }
+
+    public boolean createFile(String fileName, String data) {
+        try {
+            output.writeUTF("PUT " + fileName + " " + data);
+            String response = input.readUTF();
+            if ("403".equals(response)) {
+                return false;
+            }
+
+            return "200".equals(response);
+        } catch (IOException e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
 }

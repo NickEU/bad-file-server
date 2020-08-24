@@ -5,6 +5,7 @@ import java.util.Scanner;
 class UserInterface {
     Scanner sc = new Scanner(System.in);
     Client client = new Client("127.0.0.1", 33333);
+    final String MSG_REQUEST_SENT = "The request was sent.";
 
     void start() {
         client.start();
@@ -34,12 +35,20 @@ class UserInterface {
 
     private void createFile() {
         String fileName = getFilenameFromUser();
-        // do stuff
+        System.out.print("Enter file content: ");
+        String data = sc.nextLine();
+        boolean fileCreated = client.createFile(fileName, data);
+        System.out.println(MSG_REQUEST_SENT);
+        String result = fileCreated
+            ? "Ok, the response says that the file was created!"
+            : "Ok, the response says that creating the file was forbidden!";
+        System.out.println(result);
     }
 
     private void getFile() {
         String fileName = getFilenameFromUser();
         String FILE_CONTENT = client.getFile(fileName);
+        System.out.println(MSG_REQUEST_SENT);
         if (FILE_CONTENT == null) {
             System.out.println("Ok, the response says that the file was not found!");
         } else {
