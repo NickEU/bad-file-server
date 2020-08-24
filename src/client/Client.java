@@ -80,4 +80,12 @@ class Client {
         }
         return true;
     }
+
+    public void shutdownServer() {
+        try {
+            output.writeUTF("exit");
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
 }
