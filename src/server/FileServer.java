@@ -29,13 +29,13 @@ class FileServer {
                 ) {
                     String req = input.readUTF();
                     if ("exit".equalsIgnoreCase(req.trim())) {
+                        server.close();
                         return;
                     }
                     String response = processRequest(req.split(API.COMMAND_ARG_SEPARATOR));
                     output.writeUTF(response);
                 }
             }
-
         } catch (IOException e) {
             e.printStackTrace();
         }
