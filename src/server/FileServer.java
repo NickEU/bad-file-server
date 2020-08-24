@@ -28,7 +28,7 @@ class FileServer {
                     DataOutputStream output = new DataOutputStream(socket.getOutputStream())
                 ) {
                     String req = input.readUTF();
-                    if ("exit".equalsIgnoreCase(req)) {
+                    if ("exit".equalsIgnoreCase(req.trim())) {
                         return;
                     }
                     String response = processRequest(req.split(API.COMMAND_ARG_SEPARATOR));
