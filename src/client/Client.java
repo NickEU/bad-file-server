@@ -1,5 +1,7 @@
 package client;
 
+import conventions.API;
+
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
@@ -11,12 +13,8 @@ class Client {
     private final int PORT;
     private DataInputStream input;
     private DataOutputStream output;
-    private final String STATUS_CODE_200 = "200";
-    private final String STATUS_CODE_404 = "404";
-    private final String STATUS_CODE_403 = "403";
-    private final String COMMAND_ARG_SEPARATOR = " ";
 
-    public Client(String SERVER_ADDRESS, int PORT) {
+    Client(String SERVER_ADDRESS, int PORT) {
         this.SERVER_ADDRESS = SERVER_ADDRESS;
         this.PORT = PORT;
     }
@@ -32,15 +30,14 @@ class Client {
         }
     }
 
-    public String getFile(String fileName) {
-        final String httpRequestMethodGet = "GET";
+    String getFile(String fileName) {
         try {
-            output.writeUTF(httpRequestMethodGet + COMMAND_ARG_SEPARATOR + fileName);
+            output.writeUTF(API.HTTP_REQUEST_METHOD_GET + API.COMMAND_ARG_SEPARATOR + fileName);
             String response = input.readUTF();
-            if (response.startsWith(STATUS_CODE_404)) {
+            if (response.startsWith(API.STATUS_CODE_404)) {
                 return null;
-            } else if (response.startsWith(STATUS_CODE_200)) {
-                return response.split(COMMAND_ARG_SEPARATOR)[1];
+            } else if (response.startsWith(API.STATUS_CODE_200)) {
+                return response.split(API.COMMAND_ARG_SEPARATOR)[1];
             } else {
                 return null; //something went wrong
             }
@@ -50,33 +47,31 @@ class Client {
         }
     }
 
-    public boolean createFile(String fileName, String data) {
-        final String httpRequestMethodPut = "PUT";
+    boolean createFile(String fileName, String data) {
         try {
-            output.writeUTF(httpRequestMethodPut + COMMAND_ARG_SEPARATOR
-                + fileName + COMMAND_ARG_SEPARATOR + data);
+            output.writeUTF(API.HTTP_REQUEST_METHOD_PUT + API.COMMAND_ARG_SEPARATOR
+                + fileName + API.COMMAND_ARG_SEPARATOR + data);
             String response = input.readUTF();
-            if (STATUS_CODE_403.equals(response)) {
+            if (API.STATUS_CODE_403.equals(response)) {
                 return false;
             }
 
-            return STATUS_CODE_200.equals(response);
+            return API.STATUS_CODE_200.equals(response);
         } catch (IOException e) {
             e.printStackTrace();
             return false;
         }
     }
 
-    public boolean deleteFile(String fileName) {
-        final String httpRequestMethodDelete = "DELETE";
+    boolean deleteFile(String fileName) {
         try {
-            output.writeUTF(httpRequestMethodDelete + COMMAND_ARG_SEPARATOR + fileName);
+            output.writeUTF(API.HTTP_REQUEST_METHOD_DELETE + API.COMMAND_ARG_SEPARATOR + fileName);
             String response = input.readUTF();
-            if (STATUS_CODE_404.equals(response)) {
+            if (API.STATUS_CODE_404.equals(response)) {
                 return false;
             }
 
-            return STATUS_CODE_200.equals(response);
+            return API.STATUS_CODE_200.equals(response);
         } catch (IOException e) {
             e.printStackTrace();
         }
