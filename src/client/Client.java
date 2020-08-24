@@ -7,6 +7,8 @@ import java.io.DataOutputStream;
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.Socket;
+import java.util.Arrays;
+import java.util.stream.Collectors;
 
 class Client {
     private final String SERVER_ADDRESS;
@@ -37,7 +39,8 @@ class Client {
             if (response.startsWith(API.STATUS_CODE_404)) {
                 return null;
             } else if (response.startsWith(API.STATUS_CODE_200)) {
-                return response.split(API.COMMAND_ARG_SEPARATOR)[1];
+                return Arrays.stream(response.split(API.COMMAND_ARG_SEPARATOR))
+                    .skip(1).collect(Collectors.joining(" "));
             } else {
                 return null; //something went wrong
             }
