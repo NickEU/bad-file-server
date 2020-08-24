@@ -4,8 +4,11 @@ import java.util.Objects;
 
 class AbstractFile {
     private final String name;
-    AbstractFile(String name) {
+    private final String content;
+
+    AbstractFile(String name, String content) {
         this.name = name;
+        this.content = content;
     }
 
     String getName() {
@@ -23,5 +26,10 @@ class AbstractFile {
     @Override
     public int hashCode() {
         return Objects.hash(getName());
+    }
+
+    @Override
+    public String toString() {
+        return content;
     }
 }

@@ -1,27 +1,57 @@
 package server;
 
-import java.util.HashMap;
-import java.util.Map;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.PrintWriter;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.stream.Collectors;
 
 class FileStorage {
-    Map<String, AbstractFile> files = new HashMap<>();
+    private final String pathToDir = "src" + File.separator + "server"
+        + File.separator + "data" + File.separator;
 
-    boolean add(String fileName) {
-        if (fileName.matches("^file(\\d|10)$")) {
-            if (files.get(fileName) != null) {
-                return false;
-            }
-            files.put(fileName, new AbstractFile(fileName));
-            return true;
+    public FileStorage() {
+        try {
+            Files.createDirectories(Paths.get(pathToDir));
+        } catch (IOException e) {
+            e.printStackTrace();
         }
-        return false;
+    }
+
+    boolean add(String fileName, String fileContent) {
+        File file = new File(pathToDir + fileName);
+        if (file.exists()) {
+            return false;
+        }
+
+        try (PrintWriter pw = new PrintWriter(file)) {
+            pw.print(fileContent);
+            return true;
+        } catch (FileNotFoundException e) {
+            System.out.println(e.getMessage());
+            return false;
+        }
     }
 
     AbstractFile get(String fileName) {
-        return files.get(fileName);
+        try {
+            String content = Files.lines(Paths.get(pathToDir + fileName))
+                .collect(Collectors.joining());
+            return new AbstractFile(fileName, content);
+        } catch (IOException e) {
+            return null;
+        }
     }
 
     boolean delete(String fileName) {
-        return files.remove(fileName) != null;
+        try {
+            Path p = Paths.get(pathToDir + fileName);
+            return Files.deleteIfExists(p);
+        } catch (IOException e) {
+            return false;
+        }
     }
 }
