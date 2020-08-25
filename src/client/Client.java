@@ -50,25 +50,30 @@ class Client {
         }
     }
 
-    boolean createFile(String fileName, String data) {
+    String createFile(String fileName, String data) {
+        String emptyString = "";
         try {
             output.writeUTF(API.HTTP_REQUEST_METHOD_PUT + API.COMMAND_ARG_SEPARATOR
                 + fileName + API.COMMAND_ARG_SEPARATOR + data);
             String response = input.readUTF();
-            if (API.STATUS_CODE_403.equals(response)) {
-                return false;
+            if (response.startsWith(API.STATUS_CODE_403)) {
+                return emptyString;
             }
-
-            return API.STATUS_CODE_200.equals(response);
+            if (response.startsWith(API.STATUS_CODE_200)) {
+                return response.split(API.COMMAND_ARG_SEPARATOR)[1];
+            }
+            return emptyString;
         } catch (IOException e) {
             e.printStackTrace();
-            return false;
+            return emptyString;
         }
     }
 
-    boolean deleteFile(String fileName) {
+    boolean deleteFile(String identifier, boolean isId) {
         try {
-            output.writeUTF(API.HTTP_REQUEST_METHOD_DELETE + API.COMMAND_ARG_SEPARATOR + fileName);
+            output.writeUTF(API.HTTP_REQUEST_METHOD_DELETE + API.COMMAND_ARG_SEPARATOR
+                + (isId ? API.REQ_FILE_BY_ID : API.REQ_FILE_BY_NAME)
+                + API.COMMAND_ARG_SEPARATOR + identifier);
             String response = input.readUTF();
             if (API.STATUS_CODE_404.equals(response)) {
                 return false;
