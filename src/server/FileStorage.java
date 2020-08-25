@@ -7,51 +7,104 @@ import java.io.PrintWriter;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.SortedMap;
+import java.util.TreeMap;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.stream.Collectors;
 
 class FileStorage {
-    private final String pathToDir = "src" + File.separator + "server"
+    private static int id;
+    private final ExecutorService pool = Executors.newCachedThreadPool();
+    private final SortedMap<String, String> idsToNames = new TreeMap<>();
+    private final String pathToDataDir = "src" + File.separator + "server"
         + File.separator + "data" + File.separator;
+    private final String pathToConfigFile = "src" + File.separator + "server"
+        + File.separator + "config.txt";
+    private final String SCARY_DELIMITER = "===";
 
     public FileStorage() {
         try {
-            Files.createDirectories(Paths.get(pathToDir));
+            Files.createDirectories(Paths.get(pathToDataDir));
+            readMapFromFile();
+            id = Integer.parseInt(idsToNames.lastKey()) + 1;
         } catch (IOException e) {
             e.printStackTrace();
         }
     }
 
-    boolean add(String fileName, String fileContent) {
-        File file = new File(pathToDir + fileName);
-        if (file.exists()) {
-            return false;
-        }
+    String add(String fileName, String fileContent) {
+        try {
+            return pool.submit(
+                () -> {File file = new File(pathToDataDir + fileName);
+            if (file.exists()) {
+                return null;
+            }
 
-        try (PrintWriter pw = new PrintWriter(file)) {
-            pw.print(fileContent);
-            return true;
-        } catch (FileNotFoundException e) {
-            System.out.println(e.getMessage());
-            return false;
+            try (PrintWriter pw = new PrintWriter(file)) {
+                pw.print(fileContent);
+                return saveIdToMap(fileName);
+            } catch (FileNotFoundException e) {
+                System.out.println(e.getMessage());
+                return null;
+            }   }
+            ).get();
+        } catch (InterruptedException | ExecutionException e) {
+            return null;
         }
     }
 
-    AbstractFile get(String fileName) {
+    private synchronized String saveIdToMap(String fileName) {
+        idsToNames.put(String.valueOf(id), fileName);
+        saveMapToFile();
+        return String.valueOf(id++);
+    }
+
+    private synchronized void saveMapToFile() {
+        try (PrintWriter pw = new PrintWriter(pathToConfigFile)) {
+            idsToNames.forEach((k, v) -> pw.println(k + SCARY_DELIMITER + v));
+        } catch (FileNotFoundException e) {
+            System.out.println(e.getMessage());
+        }
+    }
+
+    private void readMapFromFile() {
         try {
-            String content = Files.lines(Paths.get(pathToDir + fileName))
+            Files.lines(Paths.get(pathToConfigFile))
+                .map(s -> s.split(SCARY_DELIMITER))
+                .forEach(s -> idsToNames.put(s[0], s[1]));
+        } catch (IOException ignored) {
+        }
+    }
+
+    AbstractFile get(String identifier, boolean isId) {
+        try {
+            String fileName = getFilenameFromId(identifier, isId);
+            String content = Files.lines(Paths.get(pathToDataDir + fileName))
                 .collect(Collectors.joining());
-            return new AbstractFile(fileName, content);
+            return new AbstractFile(identifier, content);
         } catch (IOException e) {
             return null;
         }
     }
 
-    boolean delete(String fileName) {
+    boolean delete(String identifier, boolean isId) {
         try {
-            Path p = Paths.get(pathToDir + fileName);
-            return Files.deleteIfExists(p);
+            String fileName = getFilenameFromId(identifier, isId);
+            Path p = Paths.get(pathToDataDir + fileName);
+            boolean wasDeleted = Files.deleteIfExists(p);
+            idsToNames.values().remove(fileName);
+            saveMapToFile();
+            return wasDeleted;
         } catch (IOException e) {
             return false;
         }
+    }
+
+    private String getFilenameFromId(String identifier, boolean isId) {
+        return isId
+            ? idsToNames.getOrDefault(identifier, "error")
+            : identifier;
     }
 }

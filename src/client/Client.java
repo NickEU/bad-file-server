@@ -15,6 +15,7 @@ class Client {
     private final int PORT;
     private DataInputStream input;
     private DataOutputStream output;
+    private static final String EMPTY_STRING = "";
 
     Client(String SERVER_ADDRESS, int PORT) {
         this.SERVER_ADDRESS = SERVER_ADDRESS;
@@ -32,9 +33,9 @@ class Client {
         }
     }
 
-    String getFile(String fileName) {
+    String getFile(String identifier, boolean isId) {
         try {
-            output.writeUTF(API.HTTP_REQUEST_METHOD_GET + API.COMMAND_ARG_SEPARATOR + fileName);
+            output.writeUTF(API.HTTP_REQUEST_METHOD_GET + buildRequestStrFromId(identifier, isId));
             String response = input.readUTF();
             if (response.startsWith(API.STATUS_CODE_404)) {
                 return null;
@@ -50,25 +51,27 @@ class Client {
         }
     }
 
-    boolean createFile(String fileName, String data) {
+    String createFile(String fileName, String data) {
         try {
             output.writeUTF(API.HTTP_REQUEST_METHOD_PUT + API.COMMAND_ARG_SEPARATOR
                 + fileName + API.COMMAND_ARG_SEPARATOR + data);
             String response = input.readUTF();
-            if (API.STATUS_CODE_403.equals(response)) {
-                return false;
+            if (response.startsWith(API.STATUS_CODE_403)) {
+                return EMPTY_STRING;
             }
-
-            return API.STATUS_CODE_200.equals(response);
+            if (response.startsWith(API.STATUS_CODE_200)) {
+                return response.split(API.COMMAND_ARG_SEPARATOR)[1];
+            }
+            return EMPTY_STRING;
         } catch (IOException e) {
             e.printStackTrace();
-            return false;
+            return EMPTY_STRING;
         }
     }
 
-    boolean deleteFile(String fileName) {
+    boolean deleteFile(String identifier, boolean isId) {
         try {
-            output.writeUTF(API.HTTP_REQUEST_METHOD_DELETE + API.COMMAND_ARG_SEPARATOR + fileName);
+            output.writeUTF(API.HTTP_REQUEST_METHOD_DELETE + buildRequestStrFromId(identifier, isId));
             String response = input.readUTF();
             if (API.STATUS_CODE_404.equals(response)) {
                 return false;
@@ -79,6 +82,12 @@ class Client {
             e.printStackTrace();
         }
         return true;
+    }
+
+    private String buildRequestStrFromId(String identifier, boolean isId) {
+        return API.COMMAND_ARG_SEPARATOR
+            + (isId ? API.REQ_FILE_BY_ID : API.REQ_FILE_BY_NAME)
+            + API.COMMAND_ARG_SEPARATOR + identifier;
     }
 
     public void shutdownServer() {

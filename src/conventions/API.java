@@ -1,6 +1,8 @@
 package conventions;
 
 public class API {
+    public static final String REQ_FILE_BY_ID = "BY_ID";
+    public static final String REQ_FILE_BY_NAME = "BY_NAME";
     public static final String HTTP_REQUEST_METHOD_GET = "GET";
     public static final String HTTP_REQUEST_METHOD_PUT = "PUT";
     public static final String HTTP_REQUEST_METHOD_DELETE = "DELETE";
