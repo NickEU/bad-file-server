@@ -59,7 +59,8 @@ class UserInterface {
     }
 
     private void createFile() {
-        String fileName = getFilenameFromUser();
+        System.out.print("Enter filename: ");
+        String fileName = sc.nextLine();
         System.out.print("Enter file content: ");
         String data = sc.nextLine();
         String id = client.createFile(fileName, data);
@@ -70,19 +71,14 @@ class UserInterface {
     }
 
     private void getFile() {
-        gotIdFromUser("get");
-        String fileName = getFilenameFromUser();
-        String FILE_CONTENT = client.getFile(fileName);
+        boolean isId = gotIdFromUser("get");
+        String identifier = sc.nextLine();
+        String FILE_CONTENT = client.getFile(identifier, isId);
         System.out.println(MSG_REQUEST_SENT);
         if (FILE_CONTENT == null) {
             System.out.println("Ok, the response says that the file was not found!");
         } else {
             System.out.println("Ok, the content of the file is: " + FILE_CONTENT);
         }
-    }
-
-    private String getFilenameFromUser() {
-        System.out.print("Enter filename: ");
-        return sc.nextLine();
     }
 }
