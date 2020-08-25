@@ -7,13 +7,17 @@ import java.io.PrintWriter;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.SortedMap;
+import java.util.TreeMap;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.stream.Collectors;
 
 class FileStorage {
     private static int id;
-    private final Map<String, String> idsToNames = new HashMap<>();
+    private final ExecutorService pool = Executors.newCachedThreadPool();
+    private final SortedMap<String, String> idsToNames = new TreeMap<>();
     private final String pathToDataDir = "src" + File.separator + "server"
         + File.separator + "data" + File.separator;
     private final String pathToConfigFile = "src" + File.separator + "server"
@@ -24,34 +28,40 @@ class FileStorage {
         try {
             Files.createDirectories(Paths.get(pathToDataDir));
             readMapFromFile();
-            id = idsToNames.size();
+            id = Integer.parseInt(idsToNames.lastKey()) + 1;
         } catch (IOException e) {
             e.printStackTrace();
         }
     }
 
     String add(String fileName, String fileContent) {
-        File file = new File(pathToDataDir + fileName);
-        if (file.exists()) {
-            return null;
-        }
+        try {
+            return pool.submit(
+                () -> {File file = new File(pathToDataDir + fileName);
+            if (file.exists()) {
+                return null;
+            }
 
-        try (PrintWriter pw = new PrintWriter(file)) {
-            pw.print(fileContent);
-            return saveIdToMap(fileName);
-        } catch (FileNotFoundException e) {
-            System.out.println(e.getMessage());
+            try (PrintWriter pw = new PrintWriter(file)) {
+                pw.print(fileContent);
+                return saveIdToMap(fileName);
+            } catch (FileNotFoundException e) {
+                System.out.println(e.getMessage());
+                return null;
+            }   }
+            ).get();
+        } catch (InterruptedException | ExecutionException e) {
             return null;
         }
     }
 
-    private String saveIdToMap(String fileName) {
+    private synchronized String saveIdToMap(String fileName) {
         idsToNames.put(String.valueOf(id), fileName);
         saveMapToFile();
         return String.valueOf(id++);
     }
 
-    private void saveMapToFile() {
+    private synchronized void saveMapToFile() {
         try (PrintWriter pw = new PrintWriter(pathToConfigFile)) {
             idsToNames.forEach((k, v) -> pw.println(k + SCARY_DELIMITER + v));
         } catch (FileNotFoundException e) {
@@ -79,11 +89,14 @@ class FileStorage {
         }
     }
 
-    boolean delete(String fileName) {
+    boolean delete(String identifier, boolean isId) {
         try {
-            // TODO : make it support IDs
+            String fileName = getFilenameFromId(identifier, isId);
             Path p = Paths.get(pathToDataDir + fileName);
-            return Files.deleteIfExists(p);
+            boolean wasDeleted = Files.deleteIfExists(p);
+            idsToNames.values().remove(fileName);
+            saveMapToFile();
+            return wasDeleted;
         } catch (IOException e) {
             return false;
         }
