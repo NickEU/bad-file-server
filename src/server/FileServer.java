@@ -43,20 +43,20 @@ class FileServer {
 
     private String processRequest(String[] req) {
         String reqType = req[0];
-        String fileName = req[1];
         switch (reqType) {
             case API.HTTP_REQUEST_METHOD_GET:
-                AbstractFile result = get(fileName);
+                AbstractFile result = get(req[2], API.REQ_FILE_BY_ID.equals(req[1]));
                 return result != null
                     ? API.STATUS_CODE_200 + API.COMMAND_ARG_SEPARATOR + result
                     : API.STATUS_CODE_404;
             case API.HTTP_REQUEST_METHOD_PUT:
                 String fileContent = Arrays.stream(req).skip(2).collect(Collectors.joining(" "));
-                return add(fileName, fileContent)
-                    ? API.STATUS_CODE_200
+                String id = add(req[1], fileContent);
+                return id != null
+                    ? API.STATUS_CODE_200 + API.COMMAND_ARG_SEPARATOR + id
                     : API.STATUS_CODE_403;
             case API.HTTP_REQUEST_METHOD_DELETE:
-                return delete(fileName)
+                return delete("TODO")
                     ? API.STATUS_CODE_200
                     : API.STATUS_CODE_404;
             default:
@@ -64,12 +64,12 @@ class FileServer {
         }
     }
 
-    public boolean add(String fileName, String fileContent) {
+    public String add(String fileName, String fileContent) {
         return fileStorage.add(fileName, fileContent);
     }
 
-    public AbstractFile get(String fileName) {
-        return fileStorage.get(fileName);
+    public AbstractFile get(String identifier, boolean isId) {
+        return fileStorage.get(identifier, isId);
     }
 
     public boolean delete(String fileName) {
