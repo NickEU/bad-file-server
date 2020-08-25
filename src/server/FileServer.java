@@ -20,16 +20,15 @@ class FileServer {
         System.out.println("Server started!");
         try {
             InetAddress ip = InetAddress.getByName(SERVER_IP_ADDRESS);
-            ServerSocket server = new ServerSocket(PORT, 99, ip);
             while (true) {
                 try (
+                    ServerSocket server = new ServerSocket(PORT, 99, ip);
                     Socket socket = server.accept();
                     DataInputStream input = new DataInputStream(socket.getInputStream());
                     DataOutputStream output = new DataOutputStream(socket.getOutputStream())
                 ) {
                     String req = input.readUTF();
                     if ("exit".equalsIgnoreCase(req.trim())) {
-                        server.close();
                         return;
                     }
                     String response = processRequest(req.split(API.COMMAND_ARG_SEPARATOR));
@@ -56,7 +55,7 @@ class FileServer {
                     ? API.STATUS_CODE_200 + API.COMMAND_ARG_SEPARATOR + id
                     : API.STATUS_CODE_403;
             case API.HTTP_REQUEST_METHOD_DELETE:
-                return delete("TODO")
+                return delete(req[2], API.REQ_FILE_BY_ID.equals(req[1]))
                     ? API.STATUS_CODE_200
                     : API.STATUS_CODE_404;
             default:
@@ -72,7 +71,7 @@ class FileServer {
         return fileStorage.get(identifier, isId);
     }
 
-    public boolean delete(String fileName) {
-        return fileStorage.delete(fileName);
+    public boolean delete(String fileName, boolean isId) {
+        return fileStorage.delete(fileName, isId);
     }
 }
