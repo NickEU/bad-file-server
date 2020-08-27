@@ -4,13 +4,18 @@ import conventions.API;
 
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
+import java.io.File;
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.Socket;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.stream.Collectors;
 
 class Client {
+    private final String PATH_TO_DATA_DIR = "src" + File.separator + "client"
+        + File.separator + "data" + File.separator;
     private final String SERVER_ADDRESS;
     private final int PORT;
     private DataInputStream input;
@@ -20,6 +25,11 @@ class Client {
     Client(String SERVER_ADDRESS, int PORT) {
         this.SERVER_ADDRESS = SERVER_ADDRESS;
         this.PORT = PORT;
+        try {
+            Files.createDirectories(Paths.get(PATH_TO_DATA_DIR));
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     void start() {
@@ -54,6 +64,9 @@ class Client {
     String sendFileToServer(String fileNameClient, String fileNameServer) {
         try {
             byte[] fileContents = getFileContents(fileNameClient);
+            if (fileContents == null) {
+                return EMPTY_STRING;
+            }
             output.writeUTF(API.HTTP_REQUEST_METHOD_PUT + API.COMMAND_ARG_SEPARATOR
                 + fileNameServer);
             output.writeInt(fileContents.length);
@@ -73,8 +86,12 @@ class Client {
     }
 
     private byte[] getFileContents(String fileName) {
-        //TODO: implement reading a file from src/client/data
-        return new byte[5];
+        try {
+            return Files.readAllBytes(Paths.get(PATH_TO_DATA_DIR + fileName));
+        } catch (IOException e) {
+            e.printStackTrace();
+            return null;
+        }
     }
 
     boolean deleteFileOnServer(String identifier, boolean isId) {
