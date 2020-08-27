@@ -29,7 +29,9 @@ class FileStorage {
         try {
             Files.createDirectories(Paths.get(PATH_TO_DATA_DIR));
             readMapFromFile();
-            id = idsToNames.lastKey() + 1;
+            id = idsToNames.size() > 0
+                ? idsToNames.lastKey() + 1
+                : 0;
         } catch (IOException e) {
             e.printStackTrace();
         }
