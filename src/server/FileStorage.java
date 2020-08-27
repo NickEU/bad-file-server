@@ -109,4 +109,8 @@ class FileStorage {
             ? idsToNames.getOrDefault(identifier, "error")
             : identifier;
     }
+
+    boolean fileNameIsNotInUse(String fileName) {
+        return !idsToNames.containsValue(fileName);
+    }
 }
