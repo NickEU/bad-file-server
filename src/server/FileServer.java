@@ -8,8 +8,7 @@ import java.io.IOException;
 import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.util.Arrays;
-import java.util.stream.Collectors;
+import java.util.Random;
 
 class FileServer {
     final String SERVER_IP_ADDRESS = "127.0.0.1";
@@ -31,7 +30,7 @@ class FileServer {
                     if ("exit".equalsIgnoreCase(req.trim())) {
                         return;
                     }
-                    String response = processRequest(req.split(API.COMMAND_ARG_SEPARATOR));
+                    String response = processRequest(req.split(API.COMMAND_ARG_SEPARATOR), input);
                     output.writeUTF(response);
                 }
             }
@@ -40,7 +39,7 @@ class FileServer {
         }
     }
 
-    private String processRequest(String[] req) {
+    private String processRequest(String[] req, DataInputStream input) {
         String reqType = req[0];
         switch (reqType) {
             case API.HTTP_REQUEST_METHOD_GET:
@@ -49,11 +48,21 @@ class FileServer {
                     ? API.STATUS_CODE_200 + API.COMMAND_ARG_SEPARATOR + result
                     : API.STATUS_CODE_404;
             case API.HTTP_REQUEST_METHOD_PUT:
-                String fileContent = Arrays.stream(req).skip(2).collect(Collectors.joining(" "));
-                String id = add(req[1], fileContent);
-                return id != null
-                    ? API.STATUS_CODE_200 + API.COMMAND_ARG_SEPARATOR + id
-                    : API.STATUS_CODE_403;
+                String desiredFileName = req.length == 1 ? "" : req[1];
+                String fileName = desiredFileName.isEmpty()
+                    ? generateFileName()
+                    : desiredFileName;
+                try {
+                    int fileContentLength = input.readInt();
+                    byte[] fileContent = new byte[fileContentLength];
+                    input.readFully(fileContent, 0, fileContentLength);
+                    String id = add(fileName, fileContent);
+                    return id != null
+                        ? API.STATUS_CODE_200 + API.COMMAND_ARG_SEPARATOR + id
+                        : API.STATUS_CODE_403;
+                } catch (IOException e) {
+                    return API.STATUS_CODE_404;
+                }
             case API.HTTP_REQUEST_METHOD_DELETE:
                 return delete(req[2], API.REQ_FILE_BY_ID.equals(req[1]))
                     ? API.STATUS_CODE_200
@@ -63,7 +72,11 @@ class FileServer {
         }
     }
 
-    public String add(String fileName, String fileContent) {
+    private String generateFileName() {
+        return "t" + new Random().nextInt(20) + ".txt";
+    }
+
+    public String add(String fileName, byte[] fileContent) {
         return fileStorage.add(fileName, fileContent);
     }
 
