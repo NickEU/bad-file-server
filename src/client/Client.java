@@ -33,7 +33,7 @@ class Client {
         }
     }
 
-    String getFile(String identifier, boolean isId) {
+    String getFileFromServer(String identifier, boolean isId) {
         try {
             output.writeUTF(API.HTTP_REQUEST_METHOD_GET + buildRequestStrFromId(identifier, isId));
             String response = input.readUTF();
@@ -51,10 +51,13 @@ class Client {
         }
     }
 
-    String createFile(String fileName, String data) {
+    String sendFileToServer(String fileNameClient, String fileNameServer) {
         try {
+            byte[] fileContents = getFileContents(fileNameClient);
             output.writeUTF(API.HTTP_REQUEST_METHOD_PUT + API.COMMAND_ARG_SEPARATOR
-                + fileName + API.COMMAND_ARG_SEPARATOR + data);
+                + fileNameServer);
+            output.writeInt(fileContents.length);
+            output.write(fileContents);
             String response = input.readUTF();
             if (response.startsWith(API.STATUS_CODE_403)) {
                 return EMPTY_STRING;
@@ -69,7 +72,12 @@ class Client {
         }
     }
 
-    boolean deleteFile(String identifier, boolean isId) {
+    private byte[] getFileContents(String fileName) {
+        //TODO: implement reading a file from src/client/data
+        return new byte[5];
+    }
+
+    boolean deleteFileOnServer(String identifier, boolean isId) {
         try {
             output.writeUTF(API.HTTP_REQUEST_METHOD_DELETE + buildRequestStrFromId(identifier, isId));
             String response = input.readUTF();
