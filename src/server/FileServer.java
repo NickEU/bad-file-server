@@ -66,11 +66,7 @@ class FileServer {
                 response = API.STATUS_CODE_404;
                 break;
         }
-        try {
-            output.writeUTF(response);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+        output.writeUTF(response);
     }
 
     private String processPutRequest(String[] req, DataInputStream input) throws IOException {
