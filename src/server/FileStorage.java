@@ -34,21 +34,23 @@ class FileStorage {
         }
     }
 
-    String add(String fileName, String fileContent) {
+    String add(String fileName, byte[] fileContent) {
         try {
             return pool.submit(
-                () -> {File file = new File(pathToDataDir + fileName);
-            if (file.exists()) {
-                return null;
-            }
+                () -> {
+                    File file = new File(pathToDataDir + fileName);
+                    if (file.exists()) {
+                        return null;
+                    }
 
-            try (PrintWriter pw = new PrintWriter(file)) {
-                pw.print(fileContent);
-                return saveIdToMap(fileName);
-            } catch (FileNotFoundException e) {
-                System.out.println(e.getMessage());
-                return null;
-            }   }
+                    try {
+                        Files.write(file.toPath(), fileContent);
+                        return saveIdToMap(fileName);
+                    } catch (FileNotFoundException e) {
+                        System.out.println(e.getMessage());
+                        return null;
+                    }
+                }
             ).get();
         } catch (InterruptedException | ExecutionException e) {
             return null;
