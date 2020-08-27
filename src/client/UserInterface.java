@@ -65,8 +65,8 @@ class UserInterface {
         String fileNameServer = sc.nextLine();
         String id = client.sendFileToServer(fileNameClient, fileNameServer);
         System.out.println(MSG_REQUEST_SENT);
-        String result = "Ok, the response says that " +
-            (!id.isEmpty() ? "the file was created! ID = " + id : "creating the file was forbidden!");
+        String result = "Ok, the Response says that " +
+            (!id.isEmpty() ? "file is saved! ID = " + id : "creating the file was forbidden!");
         System.out.println(result);
     }
 
@@ -76,7 +76,7 @@ class UserInterface {
         byte[] fileContent = client.getFileFromServer(identifier, isId);
         System.out.println(MSG_REQUEST_SENT);
         if (fileContent == null) {
-            System.out.println("Ok, the response says that the file was not found!");
+            System.out.println("The response says that this file is not found!");
             return;
         }
 
