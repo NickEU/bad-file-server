@@ -10,8 +10,8 @@ import java.net.InetAddress;
 import java.net.Socket;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.util.Arrays;
-import java.util.stream.Collectors;
+
+import static util.Helpers.getFileContents;
 
 class Client {
     private final String PATH_TO_DATA_DIR = "src" + File.separator + "client"
@@ -43,17 +43,17 @@ class Client {
         }
     }
 
-    String getFileFromServer(String identifier, boolean isId) {
+    byte[] getFileFromServer(String identifier, boolean isId) {
         try {
             output.writeUTF(API.HTTP_REQUEST_METHOD_GET + buildRequestStrFromId(identifier, isId));
             String response = input.readUTF();
-            if (response.startsWith(API.STATUS_CODE_404)) {
-                return null;
-            } else if (response.startsWith(API.STATUS_CODE_200)) {
-                return Arrays.stream(response.split(API.COMMAND_ARG_SEPARATOR))
-                    .skip(1).collect(Collectors.joining(" "));
+            if (response.equals(API.STATUS_CODE_200)) {
+                int responseLength = input.readInt();
+                byte[] fileContents = new byte[responseLength];
+                input.readFully(fileContents, 0, responseLength);
+                return fileContents;
             } else {
-                return null; //something went wrong
+                return null;
             }
         } catch (IOException e) {
             e.printStackTrace();
@@ -63,7 +63,7 @@ class Client {
 
     String sendFileToServer(String fileNameClient, String fileNameServer) {
         try {
-            byte[] fileContents = getFileContents(fileNameClient);
+            byte[] fileContents = getFileContents(Paths.get(PATH_TO_DATA_DIR + fileNameClient));
             if (fileContents == null) {
                 return EMPTY_STRING;
             }
@@ -82,15 +82,6 @@ class Client {
         } catch (IOException e) {
             e.printStackTrace();
             return EMPTY_STRING;
-        }
-    }
-
-    private byte[] getFileContents(String fileName) {
-        try {
-            return Files.readAllBytes(Paths.get(PATH_TO_DATA_DIR + fileName));
-        } catch (IOException e) {
-            e.printStackTrace();
-            return null;
         }
     }
 
@@ -120,6 +111,15 @@ class Client {
             output.writeUTF("exit");
         } catch (IOException e) {
             e.printStackTrace();
+        }
+    }
+
+    public boolean saveFileToLocalStorage(String fileName, byte[] fileContent) {
+        try {
+            Files.write(new File(PATH_TO_DATA_DIR + fileName).toPath(), fileContent);
+            return true;
+        } catch (IOException e) {
+            return false;
         }
     }
 }
