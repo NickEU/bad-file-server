@@ -12,13 +12,14 @@ import java.util.TreeMap;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.stream.Collectors;
+
+import static util.Helpers.getFileContents;
 
 class FileStorage {
     private static int id;
     private final ExecutorService pool = Executors.newCachedThreadPool();
-    private final SortedMap<String, String> idsToNames = new TreeMap<>();
-    private final String pathToDataDir = "src" + File.separator + "server"
+    private final SortedMap<Integer, String> idsToNames = new TreeMap<>();
+    private final String PATH_TO_DATA_DIR = "src" + File.separator + "server"
         + File.separator + "data" + File.separator;
     private final String pathToConfigFile = "src" + File.separator + "server"
         + File.separator + "config.txt";
@@ -26,9 +27,9 @@ class FileStorage {
 
     public FileStorage() {
         try {
-            Files.createDirectories(Paths.get(pathToDataDir));
+            Files.createDirectories(Paths.get(PATH_TO_DATA_DIR));
             readMapFromFile();
-            id = Integer.parseInt(idsToNames.lastKey()) + 1;
+            id = idsToNames.lastKey() + 1;
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -38,7 +39,7 @@ class FileStorage {
         try {
             return pool.submit(
                 () -> {
-                    File file = new File(pathToDataDir + fileName);
+                    File file = new File(PATH_TO_DATA_DIR + fileName);
                     if (file.exists()) {
                         return null;
                     }
@@ -58,7 +59,7 @@ class FileStorage {
     }
 
     private synchronized String saveIdToMap(String fileName) {
-        idsToNames.put(String.valueOf(id), fileName);
+        idsToNames.put(id, fileName);
         saveMapToFile();
         return String.valueOf(id++);
     }
@@ -75,26 +76,25 @@ class FileStorage {
         try {
             Files.lines(Paths.get(pathToConfigFile))
                 .map(s -> s.split(SCARY_DELIMITER))
-                .forEach(s -> idsToNames.put(s[0], s[1]));
+                .forEach(s -> idsToNames.put(Integer.parseInt(s[0]), s[1]));
         } catch (IOException ignored) {
         }
     }
 
     AbstractFile get(String identifier, boolean isId) {
-        try {
-            String fileName = getFilenameFromId(identifier, isId);
-            String content = Files.lines(Paths.get(pathToDataDir + fileName))
-                .collect(Collectors.joining());
-            return new AbstractFile(identifier, content);
-        } catch (IOException e) {
+        String fileName = getFilenameFromId(identifier, isId);
+        String pathToFile = PATH_TO_DATA_DIR + fileName;
+        if (!new File(pathToFile).exists()) {
             return null;
         }
+        byte[] content = getFileContents(Paths.get(pathToFile));
+        return new AbstractFile(identifier, content);
     }
 
     boolean delete(String identifier, boolean isId) {
         try {
             String fileName = getFilenameFromId(identifier, isId);
-            Path p = Paths.get(pathToDataDir + fileName);
+            Path p = Paths.get(PATH_TO_DATA_DIR + fileName);
             boolean wasDeleted = Files.deleteIfExists(p);
             idsToNames.values().remove(fileName);
             saveMapToFile();
@@ -106,7 +106,7 @@ class FileStorage {
 
     private String getFilenameFromId(String identifier, boolean isId) {
         return isId
-            ? idsToNames.getOrDefault(identifier, "error")
+            ? idsToNames.getOrDefault(Integer.parseInt(identifier), "error")
             : identifier;
     }
 
