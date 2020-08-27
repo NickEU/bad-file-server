@@ -73,12 +73,20 @@ class UserInterface {
     private void getFile() {
         boolean isId = gotIdFromUser("get");
         String identifier = sc.nextLine();
-        String FILE_CONTENT = client.getFileFromServer(identifier, isId);
+        byte[] fileContent = client.getFileFromServer(identifier, isId);
         System.out.println(MSG_REQUEST_SENT);
-        if (FILE_CONTENT == null) {
+        if (fileContent == null) {
             System.out.println("Ok, the response says that the file was not found!");
+            return;
+        }
+
+        System.out.print("The file was downloaded! Specify a name for it: ");
+        String fileName = sc.nextLine();
+        boolean fileSaved = client.saveFileToLocalStorage(fileName, fileContent);
+        if (fileSaved) {
+            System.out.println("File saved on the hard drive!");
         } else {
-            System.out.println("Ok, the content of the file is: " + FILE_CONTENT);
+            System.out.println("Error saving the file!");
         }
     }
 }
