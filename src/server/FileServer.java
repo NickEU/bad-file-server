@@ -73,7 +73,18 @@ class FileServer {
     }
 
     private String generateFileName() {
-        return "t" + new Random().nextInt(20) + ".txt";
+        var rnd = new Random();
+        int bound = 50;
+        int tries = 0;
+        while (true) {
+            String potentialName = "t" + rnd.nextInt(bound) + ".txt";
+            if (fileStorage.fileNameIsNotInUse(potentialName)) {
+                return potentialName;
+            }
+            if (tries++ > 10) {
+                bound *= 2;
+            }
+        }
     }
 
     public String add(String fileName, byte[] fileContent) {
