@@ -4,13 +4,18 @@ import conventions.API;
 
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
+import java.io.File;
 import java.io.IOException;
 import java.net.InetAddress;
 import java.net.Socket;
-import java.util.Arrays;
-import java.util.stream.Collectors;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+
+import static util.Helpers.getFileContents;
 
 class Client {
+    private final String PATH_TO_DATA_DIR = "src" + File.separator + "client"
+        + File.separator + "data" + File.separator;
     private final String SERVER_ADDRESS;
     private final int PORT;
     private DataInputStream input;
@@ -20,6 +25,11 @@ class Client {
     Client(String SERVER_ADDRESS, int PORT) {
         this.SERVER_ADDRESS = SERVER_ADDRESS;
         this.PORT = PORT;
+        try {
+            Files.createDirectories(Paths.get(PATH_TO_DATA_DIR));
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     void start() {
@@ -33,17 +43,17 @@ class Client {
         }
     }
 
-    String getFile(String identifier, boolean isId) {
+    byte[] getFileFromServer(String identifier, boolean isId) {
         try {
             output.writeUTF(API.HTTP_REQUEST_METHOD_GET + buildRequestStrFromId(identifier, isId));
             String response = input.readUTF();
-            if (response.startsWith(API.STATUS_CODE_404)) {
-                return null;
-            } else if (response.startsWith(API.STATUS_CODE_200)) {
-                return Arrays.stream(response.split(API.COMMAND_ARG_SEPARATOR))
-                    .skip(1).collect(Collectors.joining(" "));
+            if (response.equals(API.STATUS_CODE_200)) {
+                int responseLength = input.readInt();
+                byte[] fileContents = new byte[responseLength];
+                input.readFully(fileContents, 0, responseLength);
+                return fileContents;
             } else {
-                return null; //something went wrong
+                return null;
             }
         } catch (IOException e) {
             e.printStackTrace();
@@ -51,10 +61,16 @@ class Client {
         }
     }
 
-    String createFile(String fileName, String data) {
+    String sendFileToServer(String fileNameClient, String fileNameServer) {
         try {
+            byte[] fileContents = getFileContents(Paths.get(PATH_TO_DATA_DIR + fileNameClient));
+            if (fileContents == null) {
+                return EMPTY_STRING;
+            }
             output.writeUTF(API.HTTP_REQUEST_METHOD_PUT + API.COMMAND_ARG_SEPARATOR
-                + fileName + API.COMMAND_ARG_SEPARATOR + data);
+                + fileNameServer);
+            output.writeInt(fileContents.length);
+            output.write(fileContents);
             String response = input.readUTF();
             if (response.startsWith(API.STATUS_CODE_403)) {
                 return EMPTY_STRING;
@@ -69,7 +85,7 @@ class Client {
         }
     }
 
-    boolean deleteFile(String identifier, boolean isId) {
+    boolean deleteFileOnServer(String identifier, boolean isId) {
         try {
             output.writeUTF(API.HTTP_REQUEST_METHOD_DELETE + buildRequestStrFromId(identifier, isId));
             String response = input.readUTF();
@@ -95,6 +111,15 @@ class Client {
             output.writeUTF("exit");
         } catch (IOException e) {
             e.printStackTrace();
+        }
+    }
+
+    public boolean saveFileToLocalStorage(String fileName, byte[] fileContent) {
+        try {
+            Files.write(new File(PATH_TO_DATA_DIR + fileName).toPath(), fileContent);
+            return true;
+        } catch (IOException e) {
+            return false;
         }
     }
 }

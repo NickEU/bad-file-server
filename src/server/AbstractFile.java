@@ -4,9 +4,9 @@ import java.util.Objects;
 
 class AbstractFile {
     private final String name;
-    private final String content;
+    private final byte[] content;
 
-    AbstractFile(String name, String content) {
+    AbstractFile(String name, byte[] content) {
         this.name = name;
         this.content = content;
     }
@@ -28,8 +28,7 @@ class AbstractFile {
         return Objects.hash(getName());
     }
 
-    @Override
-    public String toString() {
+    public byte[] getContents() {
         return content;
     }
 }
